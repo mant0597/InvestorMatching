@@ -1,117 +1,113 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
+// ...existing code...
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: any, role: 'investor' | 'startup') => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
+type User = { id: string; email: string; name?: string };
+
+const AuthContext = React.createContext<any>(null);
+
+const TOKEN_KEY = 'innova_token';
+const API_BASE = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:4000';
+
+async function apiFetch(path: string, options: RequestInit = {}) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err = new Error(body.message || res.statusText);
+    (err as any).status = res.status;
+    (err as any).body = body;
+    throw err;
+  }
+  return res.json().catch(() => ({}));
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock authentication for demonstration - would be replaced with actual API calls
-const mockAuth = {
-  login: async (email: string, password: string) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Simulate successful login
-    if (email && password) {
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role: email.includes('investor') ? 'investor' : 'startup',
-        createdAt: new Date()
-      };
-      
-      return mockUser;
-    }
-    
-    throw new Error('Invalid credentials');
-  },
-  register: async (userData: any, role: 'investor' | 'startup') => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simulate successful registration
-    const mockUser: User = {
-      id: '1',
-      email: userData.email,
-      name: userData.name,
-      role,
-      createdAt: new Date()
-    };
-    
-    return mockUser;
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+  const isAuthenticated = Boolean(user);
+
+  // try to refresh access token using httpOnly cookie on startup
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // call refresh to get access token if cookie present
+        const r = await fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+        if (r.ok) {
+          const data = await r.json();
+          if (data.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
+        } else {
+          localStorage.removeItem(TOKEN_KEY);
+        }
+        // then call me
+        const me = await apiFetch('/api/auth/me', { method: 'GET' });
+        if (mounted) setUser(me.user ?? null);
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (creds: { email: string; password: string }) => {
     setLoading(true);
     try {
-      const user = await mockAuth.login(email, password);
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
-    } catch (error) {
-      throw error;
+      const data = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(creds),
+      });
+      if (data.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
+      setUser(data.user ?? null);
+      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (userData: any, role: 'investor' | 'startup') => {
+  const register = async (payload: { email: string; password: string; name?: string }) => {
     setLoading(true);
     try {
-      const user = await mockAuth.register(userData, role);
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
-    } catch (error) {
-      throw error;
+      const data = await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      if (data.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
+      setUser(data.user ?? null);
+      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+    } catch {}
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
-    localStorage.removeItem('user');
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      register, 
-      logout,
-      isAuthenticated: !!user 
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = React.useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 };

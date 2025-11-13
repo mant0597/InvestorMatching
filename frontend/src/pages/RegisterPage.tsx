@@ -11,7 +11,7 @@ const RegisterPage: React.FC = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/login');
     }
   }, [isAuthenticated, navigate]);
   

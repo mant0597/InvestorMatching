@@ -1,5 +1,6 @@
+// ...existing code...
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { User, Mail, Lock, Building, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,7 +15,6 @@ const RegisterForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +40,12 @@ const RegisterForm: React.FC = () => {
       setIsLoading(true);
       
       try {
-        await register({ name, email, password }, role);
-        navigate('/dashboard');
-      } catch (err) {
-        setError('Failed to create an account. Please try again.');
+        // include role in payload
+        await register({ name: name.trim(), email: email.trim(), password, role });
+        // AuthContext will handle navigation to dashboard
+      } catch (err: any) {
+        const msg = err?.body?.message || err?.message || 'Failed to create an account. Please try again.';
+        setError(msg);
       } finally {
         setIsLoading(false);
       }
@@ -228,3 +230,4 @@ const RegisterForm: React.FC = () => {
 };
 
 export default RegisterForm;
+// ...existing code...
