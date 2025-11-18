@@ -1,12 +1,10 @@
 // ...existing code...
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Lock, Building, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const RegisterForm: React.FC = () => {
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState<'investor' | 'startup' | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,36 +17,23 @@ const RegisterForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (step === 1 && role) {
-      setStep(2);
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
     
-    if (step === 2) {
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-      
-      if (!role) {
-        setError('Please select a role');
-        setStep(1);
-        return;
-      }
-      
-      setError(null);
-      setIsLoading(true);
-      
-      try {
-        // include role in payload
-        await register({ name: name.trim(), email: email.trim(), password, role });
-        // AuthContext will handle navigation to dashboard
-      } catch (err: any) {
-        const msg = err?.body?.message || err?.message || 'Failed to create an account. Please try again.';
-        setError(msg);
-      } finally {
-        setIsLoading(false);
-      }
+    setError(null);
+    setIsLoading(true);
+    
+    try {
+      // register without role; user will choose role in complete-profile
+      await register({ name: name.trim(), email: email.trim(), password, role: 'user' });
+      // AuthContext will handle navigation to complete-profile
+    } catch (err: any) {
+      const msg = err?.body?.message || err?.message || 'Failed to create an account. Please try again.';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,49 +57,7 @@ const RegisterForm: React.FC = () => {
       )}
       
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {step === 1 ? (
-          <div>
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                I am registering as a:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setRole('investor')}
-                  className={`flex flex-col items-center justify-center p-4 border ${
-                    role === 'investor'
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
-                      : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  } rounded-lg transition-colors`}
-                >
-                  <User className={`h-8 w-8 mb-2 ${
-                    role === 'investor' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'
-                  }`} />
-                  <span className="font-medium">Investor</span>
-                  <span className="text-xs mt-1 text-gray-500 dark:text-gray-400">Looking for opportunities</span>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => setRole('startup')}
-                  className={`flex flex-col items-center justify-center p-4 border ${
-                    role === 'startup'
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
-                      : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  } rounded-lg transition-colors`}
-                >
-                  <Building className={`h-8 w-8 mb-2 ${
-                    role === 'startup' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'
-                  }`} />
-                  <span className="font-medium">Startup</span>
-                  <span className="text-xs mt-1 text-gray-500 dark:text-gray-400">Seeking investment</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
+        <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Full name
@@ -203,25 +146,14 @@ const RegisterForm: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
 
-        <div className="flex items-center justify-between">
-          {step === 2 && (
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm font-medium text-teal-600 hover:text-teal-500 dark:text-teal-500 dark:hover:text-teal-400"
-            >
-              Back
-            </button>
-          )}
-          
+        <div className="flex items-center justify-end">
           <button
             type="submit"
-            disabled={isLoading || (step === 1 && !role)}
-            className="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {step === 1 ? 'Continue' : (isLoading ? 'Creating account...' : 'Create account')}
+            {isLoading ? 'Creating account...' : 'Create account'}
           </button>
         </div>
       </form>

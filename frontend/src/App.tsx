@@ -7,6 +7,7 @@ import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import CompleteProfilePage from './pages/CompleteProfilePage';
 import MessagesPage from './pages/MessagesPage';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/complete-profile" element={<CompleteProfilePage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:id" element={<MessagesPage />} />
