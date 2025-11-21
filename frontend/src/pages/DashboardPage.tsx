@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, StarOff, BookOpen, MessageCircle, Calendar, Settings, Bell, Heart } from 'lucide-react';
+import { StarOff, BookOpen, MessageCircle, Calendar, Settings, Bell, Heart, Edit, TrendingUp, Zap, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import StartupCard from '../components/StartupCard';
-import InvestorCard from '../components/InvestorCard';
 import SearchFilters from '../components/SearchFilters';
 import { mockStartups, mockInvestors, mockMeetingRequests } from '../data/mockData';
 
@@ -11,6 +10,21 @@ const DashboardPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [wishlistedStartups, setWishlistedStartups] = useState<string[]>([]);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('');
+  
+  // Mock notifications for startups
+  const mockNotifications = [
+    { id: '1', type: 'connect', investorName: 'Sarah Chen', message: 'Wants to connect with your startup', timestamp: new Date(Date.now() - 3600000) },
+    { id: '2', type: 'message', investorName: 'John Smith', message: 'New message in chat', timestamp: new Date(Date.now() - 7200000) },
+    { id: '3', type: 'meeting', investorName: 'Emma Wilson', message: 'Requested a meeting', timestamp: new Date(Date.now() - 86400000) },
+  ];
+
+  // Mock news for startups
+  const mockNews = [
+    { id: '1', title: 'New Funding Opportunities in Tech Sector', source: 'TechCrunch', date: '2 hours ago', category: 'Funding' },
+    { id: '2', title: 'Top 10 FinTech Startups to Watch in 2025', source: 'Forbes', date: '1 day ago', category: 'Industry' },
+    { id: '3', title: 'AI Investments Hit Record High', source: 'Bloomberg', date: '2 days ago', category: 'Market' },
+  ];
   
   // Redirect if not logged in
   React.useEffect(() => {
@@ -27,13 +41,8 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleContactRequest = (id: string) => {
-    navigate(`/messages/${id}`);
-  };
-
   const handleSearch = (query: string, filters: any) => {
     console.log('Search:', query, filters);
-    // In a real app, this would filter the data based on the query and filters
   };
 
   const formatDate = (date: Date) => {
@@ -46,18 +55,284 @@ const DashboardPage: React.FC = () => {
     });
   };
 
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  // Filter investors by category (for startup view)
+  const filteredInvestors = selectedCategoryFilter 
+    ? mockInvestors.filter(inv => 
+        (inv as any).investmentPreferences?.sectors?.includes(selectedCategoryFilter)
+      )
+    : mockInvestors;
+
   if (!user) return null;
 
+  // STARTUP DASHBOARD
+  if (user.role === 'startup') {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Startup Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Connect with investors interested in {(user as any).category || 'your category'}.
+            </p>
+          </div>
+          <button 
+            onClick={() => navigate('/profile/edit')}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            <Edit className="h-4 w-4" />
+            Edit Profile
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Find Investors Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Find Investors</h2>
+                <Zap className="h-5 w-5 text-yellow-500" />
+              </div>
+
+              {/* Category Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Filter by Category
+                </label>
+                <select
+                  value={selectedCategoryFilter}
+                  onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">All Investors</option>
+                  <option value="FinTech">FinTech</option>
+                  <option value="HealthTech">HealthTech</option>
+                  <option value="CleanTech">CleanTech</option>
+                  <option value="AI">AI</option>
+                  <option value="AgTech">AgTech</option>
+                  <option value="LogisticsTech">LogisticsTech</option>
+                  <option value="E-commerce">E-commerce</option>
+                  <option value="SaaS">SaaS</option>
+                  <option value="EdTech">EdTech</option>
+                </select>
+              </div>
+
+              {/* Investor Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredInvestors.map(investor => (
+                  <div 
+                    key={investor.id}
+                    className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-400 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                          {investor.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {(investor as any).investmentPreferences?.sectors?.[0] || 'Investor'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-4">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        📧 {investor.email}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {(investor as any).investmentPreferences?.sectors?.slice(0, 3).map((sector: string) => (
+                          <span key={sector} className="text-xs px-2 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full">
+                            {sector}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => navigate(`/messages/${investor.id}`)}
+                        className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md transition-colors"
+                      >
+                        Connect
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* News Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Latest News</h3>
+                <TrendingUp className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="space-y-3">
+                {mockNews.map(news => (
+                  <div 
+                    key={news.id}
+                    className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">
+                          {news.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
+                            {news.category}
+                          </span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                            {news.source} • {news.date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Notifications */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Notifications</h3>
+                <Bell className="h-5 w-5 text-orange-500" />
+              </div>
+              <div className="space-y-3">
+                {mockNotifications.length > 0 ? (
+                  mockNotifications.map(notif => (
+                    <div 
+                      key={notif.id}
+                      className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md border-l-4 border-teal-500"
+                    >
+                      <div className="flex items-start gap-2">
+                        {notif.type === 'connect' && <MessageCircle className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />}
+                        {notif.type === 'message' && <Bell className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />}
+                        {notif.type === 'meeting' && <Calendar className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />}
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {notif.investorName}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {notif.message}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            {getTimeAgo(notif.timestamp)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">No notifications yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Meeting Scheduler */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Meeting Requests</h3>
+                <Calendar className="h-5 w-5 text-purple-500" />
+              </div>
+              <div className="space-y-3">
+                {mockMeetingRequests.slice(0, 3).map(meeting => (
+                  <div 
+                    key={meeting.id}
+                    className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">
+                          {mockInvestors.find(i => i.id === meeting.investorId)?.name}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {formatDate(meeting.proposedDate)}
+                        </p>
+                      </div>
+                      <span 
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          meeting.status === 'accepted'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            : meeting.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        }`}
+                      >
+                        {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
+                      </span>
+                    </div>
+                    {meeting.message && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        "{meeting.message}"
+                      </p>
+                    )}
+                    {meeting.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 px-2 py-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-1">
+                          <CheckCircle className="h-3 w-3" /> Accept
+                        </button>
+                        <button className="flex-1 px-2 py-1 text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors flex items-center justify-center gap-1">
+                          <XCircle className="h-3 w-3" /> Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Profile Views</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">24</span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Connection Requests</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">3</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Messages</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // INVESTOR DASHBOARD (original)
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {user.role === 'investor' ? 'Investor Dashboard' : 'Startup Dashboard'}
+          Investor Dashboard
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          {user.role === 'investor' 
-            ? 'Discover promising startups and manage your investment opportunities.' 
-            : 'Connect with potential investors and manage your fundraising journey.'}
+          Discover promising startups and manage your investment opportunities.
         </p>
       </div>
 
@@ -66,34 +341,22 @@ const DashboardPage: React.FC = () => {
           {/* Search and filtering section */}
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              {user.role === 'investor' ? 'Discover Startups' : 'Find Investors'}
+              Discover Startups
             </h2>
             <SearchFilters 
               onSearch={handleSearch} 
-              entityType={user.role === 'investor' ? 'startup' : 'investor'} 
+              entityType="startup" 
             />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {user.role === 'investor' ? (
-                // Show startups for investors
-                mockStartups.map(startup => (
-                  <StartupCard 
-                    key={startup.id} 
-                    startup={startup} 
-                    onWishlist={handleWishlist}
-                    isWishlisted={wishlistedStartups.includes(startup.id)}
-                  />
-                ))
-              ) : (
-                // Show investors for startups
-                mockInvestors.map(investor => (
-                  <InvestorCard 
-                    key={investor.id} 
-                    investor={investor} 
-                    onContactRequest={handleContactRequest}
-                  />
-                ))
-              )}
+              {mockStartups.map(startup => (
+                <StartupCard 
+                  key={startup.id} 
+                  startup={startup} 
+                  onWishlist={handleWishlist}
+                  isWishlisted={wishlistedStartups.includes(startup.id)}
+                />
+              ))}
             </div>
           </div>
         </div>
