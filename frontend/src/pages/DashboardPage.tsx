@@ -11,7 +11,85 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [wishlistedStartups, setWishlistedStartups] = useState<string[]>([]);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('');
-  
+
+  const [startups, setStartups] = useState<any[]>(mockStartups);
+  const [investors, setInvestors] = useState<any[]>(mockInvestors);
+  const [loadingStartups, setLoadingStartups] = useState(false);
+  const [loadingInvestors, setLoadingInvestors] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const API_BASE = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:4000';
+  const TOKEN_KEY = 'innova_token';
+
+  React.useEffect(() => {
+    if (!user) return;
+    setFetchError(null);
+
+    const ctrl = new AbortController();
+    const params = new URLSearchParams();
+    if (selectedCategoryFilter) params.set('category', selectedCategoryFilter);
+
+    // optional search param: use same searchQuery if you wire it
+    // if (searchQuery) params.set('q', searchQuery);
+
+    const token = localStorage.getItem(TOKEN_KEY);
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    async function fetchStartups() {
+      try {
+        setLoadingStartups(true);
+        const res = await fetch(`${API_BASE}/api/investor?${params.toString()}`, {
+          method: 'GET',
+          headers,
+          signal: ctrl.signal,
+        });
+        if (!res.ok) throw new Error(`Startups API ${res.status}`);
+        const body = await res.json();
+        setStartups(Array.isArray(body.startups) ? body.startups : mockStartups);
+      } catch (err: any) {
+        console.warn('Startups fetch failed, using mock data', err);
+        setStartups(mockStartups);
+        setFetchError(String(err.message || err));
+      } finally {
+       setLoadingStartups(false);
+      }
+    }
+
+    async function fetchInvestors() {
+      try {
+        setLoadingInvestors(true);
+        const res = await fetch(`${API_BASE}/api/startup?${params.toString()}`, {
+          method: 'GET',
+          headers,
+          signal: ctrl.signal,
+        });
+        if (!res.ok) throw new Error(`Investors API ${res.status}`);
+        const body = await res.json();
+        setInvestors(Array.isArray(body.investors) ? body.investors : mockInvestors);
+      } catch (err: any) {
+        console.warn('Investors fetch failed, using mock data', err);
+        setInvestors(mockInvestors);
+        setFetchError(String(err.message || err));
+      } finally {
+        setLoadingInvestors(false);
+      }
+    }
+
+    if (user.role === 'startup') {
+      fetchInvestors();
+    } else {
+      fetchStartups();
+    }
+
+    return () => ctrl.abort();
+  }, [user, selectedCategoryFilter]);
+
+  // use fetched investors (filtered) instead of only mockInvestors
+  const filteredInvestors = selectedCategoryFilter
+    ? investors.filter(inv => (inv as any).investmentPreferences?.sectors?.includes(selectedCategoryFilter))
+    : investors;
+
   // Mock notifications for startups
   const mockNotifications = [
     { id: '1', type: 'connect', investorName: 'Sarah Chen', message: 'Wants to connect with your startup', timestamp: new Date(Date.now() - 3600000) },
@@ -66,13 +144,6 @@ const DashboardPage: React.FC = () => {
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
   };
-
-  // Filter investors by category (for startup view)
-  const filteredInvestors = selectedCategoryFilter 
-    ? mockInvestors.filter(inv => 
-        (inv as any).investmentPreferences?.sectors?.includes(selectedCategoryFilter)
-      )
-    : mockInvestors;
 
   if (!user) return null;
 
@@ -349,7 +420,7 @@ const DashboardPage: React.FC = () => {
             />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {mockStartups.map(startup => (
+              {startups.map(startup => (
                 <StartupCard 
                   key={startup.id} 
                   startup={startup} 

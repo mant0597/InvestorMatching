@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const startupsRoutes = require('./routes/investor');
+const investorRoutes = require('./routes/startup');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -45,6 +47,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // api routes
 app.use('/api/auth', authRoutes);
+app.use('/api/investor', startupsRoutes);
+app.use('/api/startup', investorRoutes);
 
 // connect mongo and start server
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
