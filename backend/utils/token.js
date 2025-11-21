@@ -6,11 +6,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'please-change-me';
 const ACCESS_EXP = '15m';
 const REFRESH_EXP = '7d';
 
-function signAccess(userId) {
-  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: ACCESS_EXP });
+function signAccess(userId, role) {
+  // include role so frontend & me handler know which collection to query
+  return jwt.sign({ sub: userId, role }, JWT_SECRET, { expiresIn: ACCESS_EXP });
 }
-function signRefresh(userId) {
-  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: REFRESH_EXP });
+function signRefresh(userId, role) {
+  return jwt.sign({ sub: userId, role }, JWT_SECRET, { expiresIn: REFRESH_EXP });
 }
 
 async function hashToken(token) {
