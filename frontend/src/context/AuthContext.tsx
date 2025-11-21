@@ -84,9 +84,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (data.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
       setUser(data.user ?? null);
-      navigate('/dashboard');
+      navigate('/complete-profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateProfile = async (profileData: any) => {
+    // Optimistically update the user state
+    setUser((prev) => prev ? { ...prev, ...profileData } : null);
+    
+    // Optional: Call backend to persist the profile
+    try {
+      const data = await apiFetch('/api/auth/profile', {
+        method: 'POST',
+        body: JSON.stringify(profileData),
+      });
+      setUser(data.user ?? null);
+    } catch (err) {
+      console.error('Error updating profile:', err);
     }
   };
 
@@ -100,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

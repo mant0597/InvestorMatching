@@ -1,20 +1,20 @@
 import React from 'react';
-import { Heart, Calendar, DollarSign, Users, Building, Briefcase } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Calendar, DollarSign, Users, Building, Briefcase, Eye, MessageCircle } from 'lucide-react';
 import { Startup } from '../types';
 
 interface StartupCardProps {
   startup: Startup;
   onWishlist?: (startupId: string) => void;
   isWishlisted?: boolean;
-  onContactRequest?: (startupId: string) => void;
 }
 
 const StartupCard: React.FC<StartupCardProps> = ({ 
   startup, 
   onWishlist, 
-  isWishlisted = false,
-  onContactRequest 
+  isWishlisted = false
 }) => {
+  const navigate = useNavigate();
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -91,7 +91,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
         </div>
         
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-3">
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">Raising</p>
               <p className="text-lg font-bold text-teal-600 dark:text-teal-500">
@@ -99,14 +99,20 @@ const StartupCard: React.FC<StartupCardProps> = ({
               </p>
             </div>
             
-            {onContactRequest && (
+            <div className="flex gap-2">
               <button 
-                onClick={() => onContactRequest(startup.id)}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md transition-colors"
+                onClick={() => navigate(`/startup/${startup.id}`)}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1"
               >
-                Contact
+                <Eye className="h-3 w-3" /> Open
               </button>
-            )}
+              <button 
+                onClick={() => navigate(`/messages/${startup.id}`)}
+                className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1"
+              >
+                <MessageCircle className="h-3 w-3" /> Connect
+              </button>
+            </div>
           </div>
         </div>
       </div>

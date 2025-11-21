@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Bot } from 'lucide-react';
+import { Send, Paperclip, Calendar } from 'lucide-react';
 import { Message, User } from '../types';
 
 interface ChatInterfaceProps {
@@ -7,15 +7,13 @@ interface ChatInterfaceProps {
   currentUser: User;
   receiverName: string;
   onSendMessage: (content: string) => void;
-  onOpenChatbot?: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   currentUser,
   receiverName,
-  onSendMessage,
-  onOpenChatbot
+  onSendMessage
 }) => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -47,15 +45,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
           {receiverName}
         </h3>
-        {onOpenChatbot && (
-          <button
-            onClick={onOpenChatbot}
-            className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/30"
-            title="Open AI Assistant"
-          >
-            <Bot className="h-5 w-5" />
-          </button>
-        )}
+        <button
+          className="p-2 rounded-md bg-teal-100 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 hover:bg-teal-200 dark:hover:bg-teal-900/30 flex items-center gap-2 text-sm font-medium"
+          title="Schedule Meeting"
+        >
+          <Calendar className="h-4 w-4" /> Schedule Meet
+        </button>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-3">

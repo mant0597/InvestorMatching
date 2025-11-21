@@ -7,6 +7,7 @@ import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import StartupDetailPage from './pages/StartupDetailPage';
 import MessagesPage from './pages/MessagesPage';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/startup/:id" element={<StartupDetailPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:id" element={<MessagesPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

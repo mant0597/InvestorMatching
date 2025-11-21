@@ -82,7 +82,6 @@ const DashboardPage: React.FC = () => {
                     startup={startup} 
                     onWishlist={handleWishlist}
                     isWishlisted={wishlistedStartups.includes(startup.id)}
-                    onContactRequest={handleContactRequest}
                   />
                 ))
               ) : (

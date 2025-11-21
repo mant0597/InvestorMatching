@@ -109,11 +109,6 @@ const MessagesPage: React.FC = () => {
     }
   };
 
-  const handleOpenChatbot = () => {
-    console.log('Opening chatbot');
-    // In a real app, this would open a chatbot interface
-  };
-
   if (!user) return null;
 
   return (
@@ -154,7 +149,7 @@ const MessagesPage: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">
-                            {user.role === 'investor' ? contact.companyName : contact.name}
+                            {user.role === 'investor' ? (contact as any).companyName : (contact as any).name}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                             {formatLastMessage(messages)}
@@ -192,11 +187,10 @@ const MessagesPage: React.FC = () => {
               receiverName={(() => {
                 const contact = getContactDetails(activeContact);
                 return user.role === 'investor' 
-                  ? contact?.companyName || 'Unknown Startup'
-                  : contact?.name || 'Unknown Investor';
+                  ? (contact as any)?.companyName || 'Unknown Startup'
+                  : (contact as any)?.name || 'Unknown Investor';
               })()}
               onSendMessage={handleSendMessage}
-              onOpenChatbot={handleOpenChatbot}
             />
           ) : (
             <div className="h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center">
