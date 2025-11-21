@@ -68,9 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify(creds),
       });
       if (data.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
-  setUser(data.user ?? null);
-  // after registration, direct user to profile completion
-  navigate('/complete-profile');
+      setUser(data.user ?? null);
+      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
@@ -91,12 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (profilePatch: Record<string, any>) => {
-    // In a real app this would call an API to persist the profile.
-    // Here we optimistically update local user state so the UI reflects completion.
-    setUser((prev: any) => (prev ? { ...prev, ...profilePatch } : prev));
-  };
-
   const logout = async () => {
     try {
       await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
@@ -107,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

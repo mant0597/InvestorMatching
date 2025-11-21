@@ -1,4 +1,4 @@
-import type { Startup, Investor, Message, MeetingRequest, StartupProfile, InvestorProfile, Notification, Meeting, ChatSummary } from '../types';
+import { Startup, Investor, Message, MeetingRequest } from '../types';
 
 // Mock startups
 export const mockStartups: Startup[] = [
@@ -81,35 +81,6 @@ export const mockStartups: Startup[] = [
     fundingAmount: 4500000,
     founderExperience: '15 years in logistics and supply chain',
     teamSize: 32
-  }
-];
-
-// Add example startup profiles with previous fundings and extra dashboard fields
-export const mockStartupProfiles: StartupProfile[] = [
-  {
-    id: '1',
-    email: 'contact@ecoflow.tech',
-    name: 'Alex Chen',
-    role: 'startup',
-    createdAt: new Date('2022-03-15'),
-    companyName: 'EcoFlow Technologies',
-    description: 'Developing sustainable energy solutions for residential buildings, focusing on innovative solar integration and energy storage systems.',
-    foundingDate: new Date('2022-03-15'),
-    sector: 'CleanTech',
-    fundingStage: 'Seed',
-    currentValuation: 5000000,
-    fundingAmount: 800000,
-    founderExperience: '8 years in renewable energy sector',
-    teamSize: 12,
-    previousFundings: [
-      { id: 'f1', roundType: 'pre-seed', amount: 100000, date: new Date('2021-08-01'), leadInvestor: 'Angel Group' }
-    ],
-    category: 'CleanTech',
-    foundedYear: 2022,
-    website: 'https://ecoflow.example',
-    traction: 'Pilot deployed in 10 residential buildings',
-    team: [{ name: 'Alex Chen', role: 'CEO' }],
-    profileCompleted: true
   }
 ];
 
@@ -239,82 +210,5 @@ export const mockMeetingRequests: MeetingRequest[] = [
     proposedDate: new Date('2023-09-25T10:30:00'),
     status: 'pending',
     message: 'Would love to learn more about your vertical farming solution and how it addresses urban food challenges.'
-  }
-];
-
-// Example investor profiles (extended)
-export const mockInvestorProfiles: InvestorProfile[] = [
-  {
-    id: '101',
-    email: 'james@venturecap.com',
-    name: 'James Wilson',
-    role: 'investor',
-    createdAt: new Date('2020-05-12'),
-    investmentPreferences: {
-      sectors: ['FinTech', 'HealthTech', 'AI'],
-      fundingStages: ['Seed', 'Series A'],
-      minInvestment: 200000,
-      maxInvestment: 2000000
-    },
-    investmentHistory: [
-      {
-        startupId: '2',
-        amount: 1000000,
-        date: new Date('2022-02-15')
-      }
-    ],
-    organization: 'VentureCap',
-    title: 'Partner',
-    linkedIn: 'https://linkedin.com/in/jameswilson',
-    profileCompleted: true
-  }
-];
-
-// Mock notifications
-export const mockNotifications: Notification[] = [
-  {
-    id: 'n1',
-    userId: '101',
-    type: 'interest',
-    title: 'New interest from EcoFlow Technologies',
-    body: 'EcoFlow Technologies marked interest in your profile.',
-    read: false,
-    createdAt: new Date(),
-    metadata: { startupId: '1' }
-  },
-  {
-    id: 'n2',
-    userId: '2',
-    type: 'meeting',
-    title: 'Meeting requested by James Wilson',
-    body: 'James proposed a meeting on 2023-09-20 14:00',
-    read: false,
-    createdAt: new Date(),
-    metadata: { investorId: '101', meetingId: 'mtg1' }
-  }
-];
-
-// Mock meetings with meet links
-export const mockMeetings: Meeting[] = [
-  {
-    id: 'mtg1',
-    investorId: '101',
-    startupId: '2',
-    scheduledAt: new Date('2023-09-20T14:00:00'),
-    status: 'confirmed',
-    message: 'Looking forward to discussing your AI health monitoring platform.',
-    meetLink: 'https://meet.google.com/abc-defg-hij'
-  }
-];
-
-// Mock generated chat summaries
-export const mockChatSummaries: ChatSummary[] = [
-  {
-    id: 's1',
-    sourceType: 'startup',
-    sourceId: '2',
-    summaryText: 'HealthPulse is an AI-powered health monitoring platform using wearable sensors to detect early signs of disease. Seeking Series A to scale clinical trials.',
-    generatedAt: new Date(),
-    wordCount: 29
   }
 ];

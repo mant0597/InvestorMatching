@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StarOff, BookOpen, MessageCircle, Calendar, Settings, Heart } from 'lucide-react';
+import { Star, StarOff, BookOpen, MessageCircle, Calendar, Settings, Bell, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import StartupCard from '../components/StartupCard';
 import InvestorCard from '../components/InvestorCard';
@@ -48,47 +48,6 @@ const DashboardPage: React.FC = () => {
 
   if (!user) return null;
 
-  const profileCompleted = (user as any).profileCompleted;
-
-  // Show incomplete profile message if profile not yet completed
-  if (!profileCompleted) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-300 mb-2">Complete your profile</h2>
-          <p className="text-blue-800 dark:text-blue-200 mb-4">Please complete your profile to unlock the full dashboard and start connecting with opportunities.</p>
-          <a href="/complete-profile" className="inline-block px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
-            Go to profile setup
-          </a>
-        </div>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome!</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            This is a common dashboard. Complete your profile to see personalized content based on your role.
-          </p>
-        </div>
-
-        {/* Basic info while profile is incomplete */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Profile status</div>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">Incomplete</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Your email</div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">{user.email}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Your name</div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">{user.name}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show role-specific dashboard after profile completion
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
