@@ -37,12 +37,22 @@ const Navbar: React.FC = () => {
             <Link to="/about" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium">
               About
             </Link>
-            
+
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium">
                   Dashboard
                 </Link>
+                {user?.role === 'investor' && (
+                  <Link to="/investments" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium">
+                    Investments
+                  </Link>
+                )}
+                {user?.role === 'startup' && (
+                  <Link to="/proposals" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium">
+                    Proposals
+                  </Link>
+                )}
                 <Link to="/messages" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium">
                   Messages
                 </Link>
@@ -53,7 +63,7 @@ const Navbar: React.FC = () => {
                     {user?.name} ({user?.role})
                   </span>
                 </div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="flex items-center text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium"
                 >
@@ -100,12 +110,22 @@ const Navbar: React.FC = () => {
             <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800">
               About
             </Link>
-            
+
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800">
                   Dashboard
                 </Link>
+                {user?.role === 'investor' && (
+                  <Link to="/investments" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    Investments
+                  </Link>
+                )}
+                {user?.role === 'startup' && (
+                  <Link to="/proposals" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    Proposals
+                  </Link>
+                )}
                 <Link to="/messages" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800">
                   Messages
                 </Link>
@@ -113,7 +133,7 @@ const Navbar: React.FC = () => {
                 <div className="px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                   Signed in as: {user?.name}
                 </div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >

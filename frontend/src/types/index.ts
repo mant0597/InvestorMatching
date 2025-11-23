@@ -21,6 +21,7 @@ export interface Investor extends User {
 }
 
 export interface Startup extends User {
+  _id?: string; // Backend ID
   role: 'startup';
   companyName: string;
   description: string;
@@ -31,6 +32,11 @@ export interface Startup extends User {
   fundingAmount: number;
   founderExperience: string;
   teamSize: number;
+  // Backend compatibility fields
+  category?: string;
+  fundingRound?: string;
+  foundingYear?: number;
+  founderName?: string;
 }
 
 // Other Types

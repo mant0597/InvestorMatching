@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Send, Zap, ArrowLeft } from 'lucide-react';
+import { FileText, Send, Zap, ArrowLeft, Lock, CheckCircle } from 'lucide-react';
 import NDAModal from '../components/NDAModal';
+import InvestmentModal from '../components/InvestmentModal';
+import { smartContractService } from '../services/SmartContractService';
 
 interface Startup {
   _id: string;
@@ -15,6 +17,9 @@ interface Startup {
   currentValuation: number;
   teamSize: number;
   founderExperience: string;
+  category?: string; // Backend field
+  fundingRound?: string; // Backend field
+  foundingYear?: number; // Backend field
 }
 
 const StartupDetailPage: React.FC = () => {
@@ -30,6 +35,11 @@ const StartupDetailPage: React.FC = () => {
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isNDAModalOpen, setIsNDAModalOpen] = useState(false);
 
+  // Smart Contract State
+  const [isInvesting, setIsInvesting] = useState(false);
+  const [investmentStatus, setInvestmentStatus] = useState('');
+  const [contractAddress, setContractAddress] = useState('');
+
   useEffect(() => {
     const fetchStartup = async () => {
       try {
@@ -38,7 +48,20 @@ const StartupDetailPage: React.FC = () => {
           throw new Error('Failed to fetch startup details');
         }
         const data = await response.json();
-        setStartup(data);
+
+        // Map backend fields to frontend expectations if needed
+        const mappedData: Startup = {
+          ...data,
+          sector: data.sector || data.category || 'Technology',
+          fundingStage: data.fundingStage || data.fundingRound || 'Seed',
+          // Ensure numbers are numbers
+          currentValuation: Number(data.currentValuation) || 0,
+          fundingAmount: Number(data.fundingAmount) || 0,
+          teamSize: Number(data.teamSize) || 1,
+          name: data.founderName || data.name || 'Founder',
+        };
+
+        setStartup(mappedData);
       } catch (err) {
         setError('Failed to load startup details');
         console.error(err);
@@ -77,8 +100,41 @@ const StartupDetailPage: React.FC = () => {
 
   const handleSignNDA = (signatureData: string) => {
     console.log('NDA Signed for', startup?.companyName);
-    console.log('Signature Data:', signatureData);
-    alert('NDA successfully signed!');
+    // In a real app, you would upload the signature image to the backend here
+    alert('NDA successfully signed! You can now access confidential documents.');
+  };
+
+  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+
+  const handleCreateProposal = async (data: any) => {
+    try {
+      const token = localStorage.getItem('innova_token');
+      const res = await fetch(`http://localhost:4000/api/contract`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          startupId: startup?._id,
+          ...data
+        })
+      });
+
+      if (res.ok) {
+        alert('Investment Proposal Created! Check your Investments page.');
+        navigate('/dashboard'); // Or navigate to /investments
+      } else {
+        alert('Failed to create proposal');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error creating proposal');
+    }
+  };
+
+  const handleInvestClick = () => {
+    setIsInvestmentModalOpen(true);
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
@@ -92,6 +148,11 @@ const StartupDetailPage: React.FC = () => {
           <ArrowLeft className="h-6 w-6" />
         </button>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{startup.companyName}</h1>
+        {contractAddress && (
+          <span className="ml-auto text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500">
+            Contract: {contractAddress.substring(0, 8)}...
+          </span>
+        )}
       </div>
 
       <div className="flex-1 flex overflow-hidden">
@@ -112,27 +173,42 @@ const StartupDetailPage: React.FC = () => {
 
               <div className="prose dark:prose-invert max-w-none">
                 <h3 className="text-lg font-semibold mb-2">About</h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-6">{startup.description}</p>
+                <p className="text-gray-700 dark:text-gray-300 mb-6">{startup.description || 'No description available.'}</p>
 
                 <h3 className="text-lg font-semibold mb-2">Key Metrics</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-xs text-gray-500 uppercase">Valuation</p>
-                    <p className="font-semibold">${(startup.currentValuation / 1000000).toFixed(1)}M</p>
+                    <p className="font-semibold">
+                      {startup.currentValuation > 0
+                        ? `$${(startup.currentValuation / 1000000).toFixed(1)}M`
+                        : 'N/A'}
+                    </p>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-xs text-gray-500 uppercase">Funding</p>
-                    <p className="font-semibold">${(startup.fundingAmount / 1000000).toFixed(1)}M</p>
+                    <p className="font-semibold">
+                      {startup.fundingAmount > 0
+                        ? `$${(startup.fundingAmount / 1000000).toFixed(1)}M`
+                        : 'N/A'}
+                    </p>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-xs text-gray-500 uppercase">Team</p>
-                    <p className="font-semibold">{startup.teamSize}</p>
+                    <p className="font-semibold">{startup.teamSize} Members</p>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-xs text-gray-500 uppercase">Founder</p>
                     <p className="font-semibold truncate">{startup.name}</p>
                   </div>
                 </div>
+
+                {startup.founderExperience && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2">Founder Experience</h3>
+                    <p className="text-gray-700 dark:text-gray-300">{startup.founderExperience}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -146,7 +222,10 @@ const StartupDetailPage: React.FC = () => {
               >
                 <FileText className="h-5 w-5" /> Sign E-NDA
               </button>
-              <button className="flex-[2] bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors">
+              <button
+                onClick={handleInvestClick}
+                className="flex-[2] bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              >
                 <Zap className="h-5 w-5" /> Invest Now
               </button>
             </div>
@@ -172,8 +251,8 @@ const StartupDetailPage: React.FC = () => {
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.sender === 'user'
-                      ? 'bg-teal-600 text-white rounded-br-none'
-                      : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm rounded-bl-none'
+                    ? 'bg-teal-600 text-white rounded-br-none'
+                    : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm rounded-bl-none'
                     }`}
                 >
                   {msg.text}
@@ -207,6 +286,13 @@ const StartupDetailPage: React.FC = () => {
         isOpen={isNDAModalOpen}
         onClose={() => setIsNDAModalOpen(false)}
         onSign={handleSignNDA}
+        companyName={startup.companyName}
+      />
+
+      <InvestmentModal
+        isOpen={isInvestmentModalOpen}
+        onClose={() => setIsInvestmentModalOpen(false)}
+        onSubmit={handleCreateProposal}
         companyName={startup.companyName}
       />
     </div>
