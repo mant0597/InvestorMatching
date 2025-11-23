@@ -29,9 +29,6 @@ const DashboardPage: React.FC = () => {
     const params = new URLSearchParams();
     if (selectedCategoryFilter) params.set('category', selectedCategoryFilter);
 
-    // optional search param: use same searchQuery if you wire it
-    // if (searchQuery) params.set('q', searchQuery);
-
     const token = localStorage.getItem(TOKEN_KEY);
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -50,8 +47,6 @@ const DashboardPage: React.FC = () => {
         // Normalize data to ensure 'id' property exists
         const normalizedStartups = fetchedStartups.map(s => ({ ...s, id: s.id || s._id }));
         setStartups(normalizedStartups);
-        const fetchedStartups = Array.isArray(body.startups) ? body.startups.map((s: any) => ({ ...s, id: s._id })) : mockStartups;
-        setStartups(fetchedStartups);
       } catch (err: any) {
         console.warn('Startups fetch failed, using mock data', err);
         // Also normalize mock data on failure
@@ -447,8 +442,6 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {startups.map(startup => (
                 <StartupCard
-                  key={startup.id} 
-                  startup={startup} 
                   key={startup.id}
                   startup={startup}
                   onWishlist={handleWishlist}
@@ -524,11 +517,6 @@ const DashboardPage: React.FC = () => {
                     if (!startup) return null;
 
                     return (
-                      <div key={id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
-                        <div
-                          // The key prop should be on the outermost element in the array,
-                          // but since we are not mapping over components here, we can just remove it.
-                        >
                       <div
                         key={id}
                         className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center"
@@ -556,8 +544,7 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
           )}
-
-          {/* Quick actions */}
+          
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-3">
