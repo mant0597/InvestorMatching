@@ -147,7 +147,19 @@ exports.me = async (req, res) => {
     const RoleModel = modelForRole(payload.role);
     const user = await RoleModel.findById(payload.sub).select('-passwordHash -refreshToken').lean();
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
-    res.json({ user });
+    // res.json({ user });
+    const userPayload = {
+      id: user._id,
+      email: user.email,
+      name: user.name || user.companyName || '',
+      role: user.role,
+      pitchDeckFile: user.pitchDeckFile || null,
+    };
+    if(user.pitchDeckFile) userPayload.pitchDeckFile = user.pitchDeckFile;
+    if(user.investmentPreferences) userPayload.investmentPreferences = user.investmentPreferences;
+    res.json({ user: userPayload });
+    
+
   } catch (err) {
     res.status(401).json({ message: 'Unauthorized' });
   }

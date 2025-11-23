@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Calendar, DollarSign, Users, Building, Briefcase, Eye, MessageCircle } from 'lucide-react';
 import { Startup } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface StartupCardProps {
   startup: Startup;
@@ -15,6 +16,8 @@ const StartupCard: React.FC<StartupCardProps> = ({
   isWishlisted = false
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const API_BASE = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:4000';
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -36,6 +39,49 @@ const StartupCard: React.FC<StartupCardProps> = ({
     
     return `${diffYears} year${diffYears !== 1 ? 's' : ''}`;
   };
+
+
+  const handleConnect = async () => {
+    const startupId = startup?.id || startup?._id;
+    console.log('Connect clicked for startup:', startupId);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!startupId) {
+      console.error('startup id missing on card', startup);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('innova_token') || '';
+      const res = await fetch(`${API_BASE}/api/rooms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ participants: [user.id, startupId] }),
+      });
+
+      if (!res.ok) {
+        console.error('create/get room failed', await res.text());
+        return;
+      }
+
+      const body = await res.json();
+      const room = body.room || body;
+      const roomId = room && (room._id || room.id || room.roomId);
+      if (roomId) {
+        navigate(`/messages/${roomId}`);
+      } else {
+        console.error('no room id returned', body);
+      }
+    } catch (err) {
+      console.error('connect error', err);
+    }
+  };
+  
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg border border-gray-200 dark:border-gray-700">
@@ -107,7 +153,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
                 <Eye className="h-3 w-3" /> Open
               </button>
               <button 
-                onClick={() => navigate(`/messages/${startup.id}`)}
+                onClick={handleConnect}
                 className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1"
               >
                 <MessageCircle className="h-3 w-3" /> Connect
