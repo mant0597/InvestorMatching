@@ -46,13 +46,14 @@ const DashboardPage: React.FC = () => {
         });
         if (!res.ok) throw new Error(`Startups API ${res.status}`);
         const body = await res.json();
-        setStartups(Array.isArray(body.startups) ? body.startups : mockStartups);
+        const fetchedStartups = Array.isArray(body.startups) ? body.startups.map((s: any) => ({ ...s, id: s._id })) : mockStartups;
+        setStartups(fetchedStartups);
       } catch (err: any) {
         console.warn('Startups fetch failed, using mock data', err);
         setStartups(mockStartups);
         setFetchError(String(err.message || err));
       } finally {
-       setLoadingStartups(false);
+        setLoadingStartups(false);
       }
     }
 
@@ -103,7 +104,7 @@ const DashboardPage: React.FC = () => {
     { id: '2', title: 'Top 10 FinTech Startups to Watch in 2025', source: 'Forbes', date: '1 day ago', category: 'Industry' },
     { id: '3', title: 'AI Investments Hit Record High', source: 'Bloomberg', date: '2 days ago', category: 'Market' },
   ];
-  
+
   // Redirect if not logged in
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -160,7 +161,7 @@ const DashboardPage: React.FC = () => {
               Connect with investors interested in {(user as any).category || 'your category'}.
             </p>
           </div>
-          <button 
+          <button
             onClick={() => navigate('/profile/edit')}
             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
@@ -205,7 +206,7 @@ const DashboardPage: React.FC = () => {
               {/* Investor Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredInvestors.map(investor => (
-                  <div 
+                  <div
                     key={investor.id}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-400 transition-colors"
                   >
@@ -219,7 +220,7 @@ const DashboardPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 mb-4">
                       <p className="text-xs text-gray-600 dark:text-gray-400">
                         📧 {investor.email}
@@ -234,7 +235,7 @@ const DashboardPage: React.FC = () => {
                     </div>
 
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={() => navigate(`/messages/${investor.id}`)}
                         className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md transition-colors"
                       >
@@ -254,7 +255,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="space-y-3">
                 {mockNews.map(news => (
-                  <div 
+                  <div
                     key={news.id}
                     className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                   >
@@ -290,7 +291,7 @@ const DashboardPage: React.FC = () => {
               <div className="space-y-3">
                 {mockNotifications.length > 0 ? (
                   mockNotifications.map(notif => (
-                    <div 
+                    <div
                       key={notif.id}
                       className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md border-l-4 border-teal-500"
                     >
@@ -326,7 +327,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="space-y-3">
                 {mockMeetingRequests.slice(0, 3).map(meeting => (
-                  <div 
+                  <div
                     key={meeting.id}
                     className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
                   >
@@ -339,14 +340,13 @@ const DashboardPage: React.FC = () => {
                           {formatDate(meeting.proposedDate)}
                         </p>
                       </div>
-                      <span 
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          meeting.status === 'accepted'
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${meeting.status === 'accepted'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                             : meeting.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        }`}
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          }`}
                       >
                         {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
                       </span>
@@ -414,16 +414,16 @@ const DashboardPage: React.FC = () => {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Discover Startups
             </h2>
-            <SearchFilters 
-              onSearch={handleSearch} 
-              entityType="startup" 
+            <SearchFilters
+              onSearch={handleSearch}
+              entityType="startup"
             />
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {startups.map(startup => (
-                <StartupCard 
-                  key={startup.id} 
-                  startup={startup} 
+                <StartupCard
+                  key={startup.id}
+                  startup={startup}
                   onWishlist={handleWishlist}
                   isWishlisted={wishlistedStartups.includes(startup.id)}
                 />
@@ -439,14 +439,14 @@ const DashboardPage: React.FC = () => {
             {mockMeetingRequests.length > 0 ? (
               <div className="space-y-4">
                 {mockMeetingRequests.map(meeting => (
-                  <div 
+                  <div
                     key={meeting.id}
                     className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {user.role === 'investor' 
+                          {user.role === 'investor'
                             ? mockStartups.find(s => s.id === meeting.startupId)?.companyName
                             : mockInvestors.find(i => i.id === meeting.investorId)?.name
                           }
@@ -455,14 +455,13 @@ const DashboardPage: React.FC = () => {
                           {formatDate(meeting.proposedDate)}
                         </p>
                       </div>
-                      <span 
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          meeting.status === 'accepted'
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${meeting.status === 'accepted'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                             : meeting.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        }`}
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          }`}
                       >
                         {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
                       </span>
@@ -496,9 +495,9 @@ const DashboardPage: React.FC = () => {
                   {wishlistedStartups.map(id => {
                     const startup = mockStartups.find(s => s.id === id);
                     if (!startup) return null;
-                    
+
                     return (
-                      <div 
+                      <div
                         key={id}
                         className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center"
                       >
@@ -510,7 +509,7 @@ const DashboardPage: React.FC = () => {
                             {startup.sector} • {startup.fundingStage}
                           </p>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleWishlist(id)}
                           className="p-1.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500"
                         >
