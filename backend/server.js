@@ -150,12 +150,13 @@ const corsOptions = {
   origin: (origin, callback) => {
     // allow same-origin tools (no origin) and the configured frontend origin
     if (!origin) return callback(null, true);
-    if (origin === FRONTEND_ORIGIN) return callback(null, true);
+    const allowedOrigins = [FRONTEND_ORIGIN, 'http://localhost:5174', 'http://localhost:5173'];
+    if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('CORS policy: origin not allowed'));
   },
   credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.set('trust proxy', 1);
@@ -165,7 +166,11 @@ app.use(cors(corsOptions));
 
 // handle preflight and ensure headers for credentials
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+  const origin = req.headers.origin;
+  const allowedOrigins = [FRONTEND_ORIGIN, 'http://localhost:5174', 'http://localhost:5173'];
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
@@ -240,6 +245,7 @@ io.on('connection', (socket) => {
   });
 });
 
+app.use('/api/contract', require('./routes/contract'));
 
 // connect mongo and start server
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })

@@ -35,3 +35,22 @@ exports.list = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * GET /api/investor/:id
+ */
+exports.getById = async (req, res) => {
+  try {
+    const startup = await Startup.findById(req.params.id).select('-passwordHash -refreshToken -__v');
+    if (!startup) {
+      return res.status(404).json({ message: 'Startup not found' });
+    }
+    res.json(startup);
+  } catch (err) {
+    console.error('[STARTUP][GET] error', err);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Startup not found' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+};
