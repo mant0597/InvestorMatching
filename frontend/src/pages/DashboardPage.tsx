@@ -29,9 +29,6 @@ const DashboardPage: React.FC = () => {
     const params = new URLSearchParams();
     if (selectedCategoryFilter) params.set('category', selectedCategoryFilter);
 
-    // optional search param: use same searchQuery if you wire it
-    // if (searchQuery) params.set('q', searchQuery);
-
     const token = localStorage.getItem(TOKEN_KEY);
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -46,11 +43,15 @@ const DashboardPage: React.FC = () => {
         });
         if (!res.ok) throw new Error(`Startups API ${res.status}`);
         const body = await res.json();
-        const fetchedStartups = Array.isArray(body.startups) ? body.startups.map((s: any) => ({ ...s, id: s._id })) : mockStartups;
-        setStartups(fetchedStartups);
+        const fetchedStartups = Array.isArray(body.startups) ? body.startups : mockStartups;
+        // Normalize data to ensure 'id' property exists
+        const normalizedStartups = fetchedStartups.map(s => ({ ...s, id: s.id || s._id }));
+        setStartups(normalizedStartups);
       } catch (err: any) {
         console.warn('Startups fetch failed, using mock data', err);
-        setStartups(mockStartups);
+        // Also normalize mock data on failure
+        const normalizedMockStartups = mockStartups.map(s => ({ ...s, id: s.id || s._id }));
+        setStartups(normalizedMockStartups);
         setFetchError(String(err.message || err));
       } finally {
         setLoadingStartups(false);
@@ -145,6 +146,25 @@ const DashboardPage: React.FC = () => {
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
   };
+
+  const quickActions = [
+    {
+      label: 'Messages',
+      icon: MessageCircle,
+    },
+    {
+      label: 'Schedule',
+      icon: Calendar,
+    },
+    {
+      label: 'Resources',
+      icon: BookOpen,
+    },
+    {
+      label: 'Settings',
+      icon: Settings,
+    },
+  ];
 
   if (!user) return null;
 
@@ -524,27 +544,19 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
           )}
-
-          {/* Quick actions */}
+          
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-3">
-              <button className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
-                <MessageCircle className="h-5 w-5 text-teal-600 dark:text-teal-500 mb-1" />
-                <span className="block text-sm font-medium text-gray-900 dark:text-white">Messages</span>
-              </button>
-              <button className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
-                <Calendar className="h-5 w-5 text-teal-600 dark:text-teal-500 mb-1" />
-                <span className="block text-sm font-medium text-gray-900 dark:text-white">Schedule</span>
-              </button>
-              <button className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
-                <BookOpen className="h-5 w-5 text-teal-600 dark:text-teal-500 mb-1" />
-                <span className="block text-sm font-medium text-gray-900 dark:text-white">Resources</span>
-              </button>
-              <button className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
-                <Settings className="h-5 w-5 text-teal-600 dark:text-teal-500 mb-1" />
-                <span className="block text-sm font-medium text-gray-900 dark:text-white">Settings</span>
-              </button>
+              {quickActions.map(action => (
+                <button
+                  key={action.label}
+                  className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left"
+                >
+                  <action.icon className="h-5 w-5 text-teal-600 dark:text-teal-500 mb-1" />
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">{action.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
